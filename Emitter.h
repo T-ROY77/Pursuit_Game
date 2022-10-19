@@ -14,7 +14,7 @@
 //
 class Emitter : public BaseObject {
 public:
-	Emitter(SpriteSystem *);
+	Emitter(SpriteSystem*);
 	void draw();
 	void start();
 	void stop();
@@ -24,9 +24,10 @@ public:
 	void setChildSize(float w, float h) { childWidth = w; childHeight = h; }
 	void setImage(ofImage);
 	void setRate(float);
+	void setSpeed(float);
 	float maxDistPerFrame();
 	void update(glm::vec3 p);
-	SpriteSystem *sys;
+	SpriteSystem* sys;
 	float rate;
 	ofVec3f velocity;
 	float lifespan;
@@ -39,4 +40,6 @@ public:
 	bool haveImage;
 	float width, height;
 	float childWidth, childHeight;
+	float particleSpeed;
+
 };

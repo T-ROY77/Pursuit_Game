@@ -3,13 +3,9 @@
 
 #include "ofxGui.h"
 
-//reset total game time
-// 
-// 
-// 
-//agents pursue player
+//
 // agents slow down when near player
-// need to rotate
+// how to rotate
 // 
 //
 //
@@ -38,21 +34,34 @@ void ofApp::setupParameters() {
 		0);
 	p.rotation = -45;
 
+	if (start) {
+		invaders->start();
+	}
+
+
+
+
+	startTime = ofGetElapsedTimeMillis();
+
+	gameTime = 0;
+
 	if (easy) {
-		energy = 15;
-		invaders->setRate(5);
-		invaders->setLifespan(1000);
+		penergy = 15;
+		agentRate = 5;
+		agentLife = 1000;
 	}
 	else if (hard) {
-		energy = 5;
-		invaders->setRate(10);
-		invaders->setLifespan(5000);
+		penergy = 5;
+		agentRate = 10;
+		agentLife = 5000;
+		
 	}
 	else
 	{
-		energy = 10;
-		invaders->setRate(5);
-		invaders->setLifespan(2000);
+		penergy = 10;
+		agentRate = 7;
+		agentLife = 2000;
+		
 	}
 }
 
@@ -72,21 +81,32 @@ void ofApp::setup() {
 	gui.setup();
 	gui.add(speed.setup("Player speed", 5, 1, 20));
 	gui.add(size.setup("Player size", 1, .1, 3));
+	gui.add(penergy.setup("Player energy \n", 10, 1, 30));
+	
 	gui.add(agentSize.setup("Agent size", 15, 5, 50));
 	gui.add(agentRate.setup("Agent spawn rate", 5, .5, 10));
 	gui.add(agentLife.setup("Agent lifespan", 1000, 0, 5000));
+	gui.add(agentSpeed.setup("Agent speed", 1, .1, 2));
+
 
 
 	gui.add(head.setup("Show heading vector", false));
 	gui.add(sprite.setup("Show sprites", false));
-	guiHide = true ;
+	guiHide = true;
 	gameOver = false;
+
+
+	//background.load("space-photo.jpg");
+	//background.resize(ofGetWindowWidth(), ofGetWindowHeight());
+
 
 	//sprite setup
 	p.image.load("dolphin.png");
 	p.image.resize(300, 300);
 
 	invaders = new Emitter(new SpriteSystem);
+	invaders = new Emitter(new SpriteSystem);
+
 
 	invaders->setPosition(glm::vec3(ofGetWindowWidth() / 2, 10, 0));
 	invaders->setChildSize(10, 10);
@@ -98,7 +118,6 @@ void ofApp::setup() {
 	invaders->setLifespan(1000);
 
 
-	invaders->start();
 
 	setupParameters();
 }
@@ -107,11 +126,12 @@ void ofApp::setup() {
 void ofApp::update() {
 	invaders->setRate(agentRate);
 	invaders->setLifespan(agentLife);
+	invaders->setSpeed(agentSpeed);
+
 	invaders->childHeight = agentSize;
 	invaders->childWidth = agentSize;
-	//invaders->setVelocity((p.pos-invaders->trans));
-	//invaders->trans = ((p.pos - invaders->trans));
-	
+
+
 	if (sprite) {
 		invaders->haveChildImage = true;
 	}
@@ -126,45 +146,51 @@ void ofApp::update() {
 
 
 
-	if (energy == 0) {
+	if (penergy <= 0) {
 		gameOver = true;
 		start = false;
 	}
 
 	if (moveUp) {
 		float x = speed;
-		p.pos += p.heading() * x;
+
 		if (p.getPoint().x > ofGetWindowWidth()) {
-			p.pos.x = ofGetWindowWidth() - (50 * size);
+			moveUp = false;
 		}
-		if (p.getPoint().y > ofGetWindowHeight() ) {
-			p.pos.y = ofGetWindowHeight() - (50 * size);
+		if (p.getPoint().y > ofGetWindowHeight()) {
+			moveUp = false;
 		}
 		if (p.getPoint().x < 0) {
-			p.pos.x = 50 * size;
+			moveUp = false;
 		}
 		if (p.getPoint().y < 0) {
-			p.pos.y = 50 * size;
+			moveUp = false;
 		}
+
+		if (moveUp) { p.pos += p.heading() * x; }
+
 		moveUp = false;
 	}
 
 	if (moveBack) {
 		float x = speed;
-		p.pos -= p.heading() * x;
 		if (p.getBackPoint().x > ofGetWindowWidth()) {
-			p.pos.x = ofGetWindowWidth() - (50 * size);
+			moveBack = false;
 		}
 		if (p.getBackPoint().y > ofGetWindowHeight()) {
-			p.pos.y = ofGetWindowHeight() - (50 * size);
+			moveBack = false;
 		}
 		if (p.getBackPoint().x < 0) {
-			p.pos.x = 50 * size;
+			moveBack = false;
 		}
 		if (p.getBackPoint().y < 0) {
-			p.pos.y = 50 * size;
+			moveBack = false;
 		}
+
+		if (moveBack) { p.pos -= p.heading() * x; }
+
 		moveBack = false;
+
 	}
 
 	if (moveRt) {
@@ -178,9 +204,9 @@ void ofApp::update() {
 	}
 
 	p.scalar = glm::vec3(size);
-	
+
 	if (!gameOver) {
-		time = ofGetElapsedTimeMillis();
+		gameTime = (ofGetElapsedTimeMillis() - startTime)/1000;
 	}
 
 }
@@ -197,8 +223,9 @@ void ofApp::checkCollisions() {
 	// "collisionDist" of the missiles.  the removeNear() function returns the
 	// number of missiles removed.
 	//
-	if (energy > 0) {
-		energy -= invaders->sys->removeNear(p.pos, collisionDist);
+	if (penergy > 0) {
+		int collisions = invaders->sys->removeNear(p.pos, collisionDist);
+		penergy = penergy - collisions;
 	}
 }
 
@@ -207,17 +234,21 @@ void ofApp::checkCollisions() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 	if (!start) {
-		ofSetBackgroundColor(ofColor::blue);
+		ofSetBackgroundColor(ofColor::darkBlue);
 
 		string startText;
 		startText += "Press space to start game ";
 		ofSetColor(ofColor::white);
-		ofDrawBitmapString(startText, ofPoint(10,20));
+		ofDrawBitmapString(startText, ofPoint(10, 20));
 
 		string diffText;
-		diffText += "Press q for easy";
-		diffText += "Press w for medium";
-		diffText += "Press e for hard";
+		diffText += "Choose Difficulty: \n";
+		diffText += "\n";
+		diffText += "Press q for easy \n";
+		diffText += "\n";
+		diffText += "Press w for medium \n";
+		diffText += "\n";
+		diffText += "Press e for hard \n";
 
 		ofSetColor(ofColor::white);
 		ofDrawBitmapString(diffText, ofPoint(10, 50));
@@ -233,20 +264,23 @@ void ofApp::draw() {
 			modeText += "Normal";
 		}
 		ofSetColor(ofColor::white);
-		ofDrawBitmapString(modeText, ofPoint(ofGetWindowWidth()/2, 50));
+		ofDrawBitmapString(modeText, ofPoint(ofGetWindowWidth() / 2, 50));
 	}
 	if (gameOver) {
-		
+
+		invaders->stop();
+
+
 		start = false;
 		ofSetBackgroundColor(ofColor::black);
 
 		string gameOverText;
 		gameOverText += "Game Over ";
 		ofSetColor(ofColor::red);
-		ofDrawBitmapString(gameOverText, ofPoint(ofGetWindowWidth()/2, ofGetWindowHeight()/2));
+		ofDrawBitmapString(gameOverText, ofPoint(ofGetWindowWidth() / 2, ofGetWindowHeight() / 2));
 
 		string timeText;
-		timeText += "Total time: " + std::to_string(time);
+		timeText += "Total time: " + std::to_string(gameTime) + " seconds";
 		ofSetColor(ofColor::red);
 		ofDrawBitmapString(timeText, ofPoint(ofGetWindowWidth() / 2, (ofGetWindowHeight() / 2) + 50));
 
@@ -265,29 +299,31 @@ void ofApp::draw() {
 		ofDrawBitmapString(modeText, ofPoint(ofGetWindowWidth() / 2, 50));
 	}
 	if (start) {
-		//ofResetElapsedTimeCounter();
-		//setupParameters();
+		ofSetColor(ofColor::white);
+		background.draw(0, 0);
+
+
 		gameOver = false;
 
-		ofSetBackgroundColor(ofColor::black);
 
 		invaders->draw();
 
 		string scoreText;
-		scoreText += "Energy: " + std::to_string(energy);
+		scoreText += "Energy: " + std::to_string(penergy);
 		ofSetColor(ofColor::red);
 		ofDrawBitmapString(scoreText, ofPoint(10, 20));
 
 		string frameRateText;
-		frameRateText += "Frame rate "; 
+		frameRateText += "Frame rate ";
 		frameRateText += std::to_string(ofGetFrameRate());
 		ofSetColor(ofColor::white);
-		ofDrawBitmapString(frameRateText, ofPoint(ofGetWindowWidth() - 200, 20));
+		ofDrawBitmapString(frameRateText, ofPoint(ofGetWindowWidth() - 250, 20));
+
 
 		string timeText;
-		timeText += "Elasped time: " + std::to_string(ofGetElapsedTimeMillis());
+		timeText += "Elasped time: " + std::to_string(gameTime) + " seconds";
 		ofSetColor(ofColor::white);
-		ofDrawBitmapString(timeText, ofPoint(ofGetWindowWidth() - 200, 40));
+		ofDrawBitmapString(timeText, ofPoint(ofGetWindowWidth() - 250, 40));
 
 
 		//draw player triangle
@@ -303,7 +339,7 @@ void ofApp::draw() {
 
 		//draw heading vector
 		if (head) {
-			float x = size;									//get scalar of player
+			float x = size;								
 			glm::vec3 o = p.heading();
 			ofSetColor(ofColor::purple);
 			ofSetLineWidth(2);
@@ -346,9 +382,6 @@ void ofApp::keyPressed(int key) {
 	if (keymap['h']) {
 		guiHide = !guiHide;
 	}
-	if (keymap[OF_KEY_CONTROL]) {
-		bCtrlKeyDown = true;
-	}
 	if (keymap[' ']) {
 		if (!start) {
 			start = true;
@@ -386,37 +419,15 @@ void ofApp::mouseMoved(int x, int y) {
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button) {
-	glm::vec3 currentMouse(x, y, 0);
-	if (bInDrag) {
-		glm::vec3 delta = currentMouse - mouseLast;
-		p.pos += delta;
-		mouseLast = currentMouse;
-	}
-	else if (bInRotate) {
-		glm::vec3 delta = currentMouse - mouseLast;
-		p.rotation += delta.x / 2.0;
-		mouseLast = currentMouse;
-	}
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button) {
-	if (p.inside(glm::vec3(x, y, 0))) {
-		if (bCtrlKeyDown) {
-			bInRotate = true;
-			mouseLast = glm::vec3(x, y, 0);
-		}
-		else {
-			bInDrag = true;
-			mouseLast = glm::vec3(x, y, 0);
-		}
-	}
+	
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button) {
-	bInDrag = false;
-	bCtrlKeyDown = false;
 }
 
 //--------------------------------------------------------------

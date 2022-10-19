@@ -6,7 +6,7 @@ BaseObject::BaseObject() {
 	rot = 0;
 }
 
-void BaseObject::setPosition(ofVec3f pos) {
+void BaseObject::setPosition(glm::vec3 pos) {
 	trans = pos;
 }
 
@@ -47,15 +47,27 @@ void Sprite::setImage(ofImage img) {
 
 glm::vec3 Sprite::heading(glm::vec3 p) {
 	glm::vec3 o = p - trans;
-	//o = glm::rotate(o, glm::radians(p.rotation), glm::vec3(0, 0, 1));
 	glm::normalize(o);
 	return o;
 }
 
+//how to move and rotate
+//
+//
+//*********************************************************************************************//
 void Sprite::moveSprite(glm::vec3 p) {
 	glm::vec3 head = heading(p);
-	float speed = 1.0;
 	trans += head * speed / ofGetFrameRate();
+
+	rot = head.y /head.x ;
+}
+
+glm::mat4 Sprite::getMatrix() {
+	glm::mat4 translate = glm::translate(glm::mat4(1.0), trans);
+	glm::mat4 rotate = glm::rotate(glm::mat4(1.0), glm::radians(rot),
+		glm::vec3(0, 0, 1));
+	glm::mat4 scalar = glm::scale(glm::mat4(1.0), scale);
+	return (translate * rotate * scalar);
 }
 
 //  Render the sprite
@@ -68,15 +80,25 @@ void Sprite::draw() {
 	//
 	if (haveImage) {
 		ofSetColor(ofColor::white);
-		image.draw(-imageWidth / 2.0 + trans.x, -imageHeight / 2.0 + trans.y);
+		ofPushMatrix();
+		ofMultMatrix(getMatrix());
+		image.draw(-imageWidth / 2.0, -imageHeight / 2.0);
+		//image.draw(-imageWidth / 2.0 + trans.x, -imageHeight / 2.0 + trans.y);
+		ofPopMatrix();
+
 	}
 	else {
 		// in case no image is supplied, draw something.
 		// 
 		ofSetColor(ofColor::green);
-		ofDrawTriangle(glm::vec3(-height, height, 0) + trans, glm::vec3(height, height, 0) + trans, glm::vec3(0,
-			-height, 0) + trans);
+		ofPushMatrix();
+		ofMultMatrix(getMatrix());
+		ofDrawTriangle(glm::vec3(-height, height, 0), glm::vec3(height, height, 0), glm::vec3(0,
+			-height, 0));
 		//ofDrawRectangle(-width / 2.0 + trans.x, -height / 2.0 + trans.y, width, height);
+
+		ofPopMatrix();
+
 	}
 }
 
@@ -142,10 +164,7 @@ void SpriteSystem::update(glm::vec3 p) {
 	}
 
 	//  Move sprite
-	//	replace with moveSprite() along heading
 	for (int i = 0; i < sprites.size(); i++) {
-		//sprites[i].trans += sprites[i].velocity / ofGetFrameRate();
-		sprites[i].rot += 1;
 		sprites[i].moveSprite(p);
 	}
 }
