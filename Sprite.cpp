@@ -14,7 +14,7 @@ void BaseObject::setPosition(glm::vec3 pos) {
 // Basic Sprite Object
 //
 Sprite::Sprite() {
-	speed = 0;
+	speed = 1;
 	velocity = ofVec3f(0, 0, 0);
 	lifespan = -1;      // lifespan of -1 => immortal 
 	birthtime = 0;
@@ -46,7 +46,8 @@ void Sprite::setImage(ofImage img) {
 }
 
 glm::vec3 Sprite::heading(glm::vec3 p) {
-	glm::vec3 o = p - trans;
+	glm::vec3 o = glm::vec3(0,-1,0);
+	o = glm::rotate(o, glm::radians(rot), glm::vec3(0, 0, 1));
 	glm::normalize(o);
 	return o;
 }
@@ -57,10 +58,92 @@ glm::vec3 Sprite::heading(glm::vec3 p) {
 //*********************************************************************************************//
 void Sprite::moveSprite(glm::vec3 p) {
 	glm::vec3 head = heading(p);
-	trans += head * speed / ofGetFrameRate();
+	trans += head * speed;
+	/*
+	
+	if (glm::dot(head, glm::normalize(p - trans)) != 1) {
+		rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
+	}
 
-	rot = head.y /head.x ;
+
+
+	if (trans.x > p.x) {
+		rot -= glm::acos(glm::dot(head, glm::normalize(p - trans)));
+	}
+	else {
+		rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
+
+	}
+	*/
+
+	//rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
+	/*
+	if (trans.x < p.x) {
+		if (rot > 90 && rot < 270) {
+
+			rot -= glm::acos(glm::dot(head, glm::normalize(p - trans)));
+
+		}
+		else {
+			rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
+
+
+		}
+	}
+
+	if (trans.x > p.x) {
+		if (rot > 90 && rot < 270) {
+
+			rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
+
+		}
+		else {
+			rot -= glm::acos(glm::dot(head, glm::normalize(p - trans)));
+
+
+		}
+
+
+
+
+
+		if (trans.x < p.x) {
+		if (rot > 90 && rot < 270) {
+
+			rot -= theta;
+		}
+		else {
+			rot += theta;
+
+		}
+	}
+
+	if (trans.x > p.x) {
+		if (rot > 90 && rot < 270) {
+
+			rot += theta;
+		}
+		else {
+			rot -= theta;
+
+		}
+
+	}
+	}
+	*/
+	
+	ofVec3f headed = heading(p);
+	ofVec3f rotVec = p - trans;
+	ofVec3f v1 = rotVec.normalize();
+	ofVec3f v2 = headed.normalize();
+
+	float dot = v2.dot(v1);
+	float theta = acos(dot);
+
+	rot += theta;
+	
 }
+
 
 glm::mat4 Sprite::getMatrix() {
 	glm::mat4 translate = glm::translate(glm::mat4(1.0), trans);
