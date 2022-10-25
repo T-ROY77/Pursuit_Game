@@ -1,5 +1,8 @@
 #include "Sprite.h"
 
+//
+// Troy Perez - CS134 SJSU
+
 BaseObject::BaseObject() {
 	trans = glm::vec3(0, 0, 0);
 	scale = ofVec3f(1, 1, 1);
@@ -35,8 +38,7 @@ float Sprite::age() {
 	return (ofGetElapsedTimeMillis() - birthtime);
 }
 
-//  Set an image for the sprite. If you don't set one, a rectangle
-//  gets drawn.
+//  Set an image for the sprite. 
 //
 void Sprite::setImage(ofImage img) {
 	image = img;
@@ -45,102 +47,37 @@ void Sprite::setImage(ofImage img) {
 	imageHeight = image.getHeight();
 }
 
-glm::vec3 Sprite::heading(glm::vec3 p) {
-	glm::vec3 o = glm::vec3(0,-1,0);
+glm::vec3 Sprite::heading() {
+	glm::vec3 o = glm::vec3(0, -1, 0);
 	o = glm::rotate(o, glm::radians(rot), glm::vec3(0, 0, 1));
 	glm::normalize(o);
 	return o;
 }
 
-//how to move and rotate
-//
-//
-//*********************************************************************************************//
 void Sprite::moveSprite(glm::vec3 p) {
-	glm::vec3 head = heading(p);
+	glm::vec3 head = heading();
 	trans += head * speed;
-	/*
-	
-	if (glm::dot(head, glm::normalize(p - trans)) != 1) {
-		rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
-	}
 
 
 
-	if (trans.x > p.x) {
-		rot -= glm::acos(glm::dot(head, glm::normalize(p - trans)));
-	}
-	else {
-		rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
-
-	}
-	*/
-
-	//rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
-	/*
-	if (trans.x < p.x) {
-		if (rot > 90 && rot < 270) {
-
-			rot -= glm::acos(glm::dot(head, glm::normalize(p - trans)));
-
-		}
-		else {
-			rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
-
-
-		}
-	}
-
-	if (trans.x > p.x) {
-		if (rot > 90 && rot < 270) {
-
-			rot += glm::acos(glm::dot(head, glm::normalize(p - trans)));
-
-		}
-		else {
-			rot -= glm::acos(glm::dot(head, glm::normalize(p - trans)));
-
-
-		}
-
-
-
-
-
-		if (trans.x < p.x) {
-		if (rot > 90 && rot < 270) {
-
-			rot -= theta;
-		}
-		else {
-			rot += theta;
-
-		}
-	}
-
-	if (trans.x > p.x) {
-		if (rot > 90 && rot < 270) {
-
-			rot += theta;
-		}
-		else {
-			rot -= theta;
-
-		}
-
-	}
-	}
-	*/
-	
-	ofVec3f headed = heading(p);
-	ofVec3f rotVec = p - trans;
-	ofVec3f v1 = rotVec.normalize();
+	//rotate agent to face the player
+	ofVec3f headed = heading();
+	ofVec3f rotVector = p - trans;
+	ofVec3f v1 = rotVector.normalize();
 	ofVec3f v2 = headed.normalize();
 
 	float dot = v2.dot(v1);
 	float theta = acos(dot);
-
-	rot += theta;
+	if (theta >= .1) {
+		theta = glm::degrees(theta);
+		rot += theta;
+	}
+	else {
+		if (theta > -360) {
+			theta = glm::degrees(theta);
+			rot -= theta;
+		}
+	}
 	
 }
 
@@ -159,27 +96,23 @@ void Sprite::draw() {
 
 	ofSetColor(255, 255, 255, 255);
 
-	// draw image centered and add in translation amount
+	// draw image centered
 	//
 	if (haveImage) {
 		ofSetColor(ofColor::white);
 		ofPushMatrix();
 		ofMultMatrix(getMatrix());
 		image.draw(-imageWidth / 2.0, -imageHeight / 2.0);
-		//image.draw(-imageWidth / 2.0 + trans.x, -imageHeight / 2.0 + trans.y);
 		ofPopMatrix();
 
 	}
 	else {
-		// in case no image is supplied, draw something.
+		// draw the triangle
 		// 
 		ofSetColor(ofColor::green);
 		ofPushMatrix();
 		ofMultMatrix(getMatrix());
-		ofDrawTriangle(glm::vec3(-height, height, 0), glm::vec3(height, height, 0), glm::vec3(0,
-			-height, 0));
-		//ofDrawRectangle(-width / 2.0 + trans.x, -height / 2.0 + trans.y, width, height);
-
+		ofDrawTriangle(glm::vec3(-height, height, 0), glm::vec3(height, height, 0), glm::vec3(0, -height, 0));
 		ofPopMatrix();
 
 	}
