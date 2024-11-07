@@ -121,11 +121,7 @@ public:
 	bool easy = false;
 	bool hard = false;
 
-	//int gameTime;
-	float gameTime;
-
-	float startTime;
-
+	float time;
 	float length = 175;
 	glm::vec3 mouseLast;
 
@@ -140,16 +136,11 @@ public:
 	bool guiHide;
 	ofxFloatSlider speed;
 	ofxFloatSlider size;
-	ofxIntSlider penergy;
-	ofxFloatSlider agentSpeed;
 	ofxFloatSlider agentSize;
 	ofxFloatSlider agentRate;
 	ofxFloatSlider agentLife;
+
 	ofxToggle sprite;
 	ofxToggle head;
-
 	Emitter* invaders;
-
-	ofImage background;
-
 };

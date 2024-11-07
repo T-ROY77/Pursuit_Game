@@ -1,15 +1,12 @@
 #include "Sprite.h"
 
-//
-// Troy Perez - CS134 SJSU
-
 BaseObject::BaseObject() {
 	trans = glm::vec3(0, 0, 0);
 	scale = ofVec3f(1, 1, 1);
 	rot = 0;
 }
 
-void BaseObject::setPosition(glm::vec3 pos) {
+void BaseObject::setPosition(ofVec3f pos) {
 	trans = pos;
 }
 
@@ -17,7 +14,7 @@ void BaseObject::setPosition(glm::vec3 pos) {
 // Basic Sprite Object
 //
 Sprite::Sprite() {
-	speed = 1;
+	speed = 0;
 	velocity = ofVec3f(0, 0, 0);
 	lifespan = -1;      // lifespan of -1 => immortal 
 	birthtime = 0;
@@ -38,7 +35,8 @@ float Sprite::age() {
 	return (ofGetElapsedTimeMillis() - birthtime);
 }
 
-//  Set an image for the sprite. 
+//  Set an image for the sprite. If you don't set one, a rectangle
+//  gets drawn.
 //
 void Sprite::setImage(ofImage img) {
 	image = img;
@@ -47,47 +45,17 @@ void Sprite::setImage(ofImage img) {
 	imageHeight = image.getHeight();
 }
 
-glm::vec3 Sprite::heading() {
-	glm::vec3 o = glm::vec3(0, -1, 0);
-	o = glm::rotate(o, glm::radians(rot), glm::vec3(0, 0, 1));
+glm::vec3 Sprite::heading(glm::vec3 p) {
+	glm::vec3 o = p - trans;
+	//o = glm::rotate(o, glm::radians(p.rotation), glm::vec3(0, 0, 1));
 	glm::normalize(o);
 	return o;
 }
 
 void Sprite::moveSprite(glm::vec3 p) {
-	glm::vec3 head = heading();
-	trans += head * speed;
-
-
-
-	//rotate agent to face the player
-	ofVec3f headed = heading();
-	ofVec3f rotVector = p - trans;
-	ofVec3f v1 = rotVector.normalize();
-	ofVec3f v2 = headed.normalize();
-
-	float dot = v2.dot(v1);
-	float theta = acos(dot);
-	if (theta >= .1) {
-		theta = glm::degrees(theta);
-		rot += theta;
-	}
-	else {
-		if (theta > -360) {
-			theta = glm::degrees(theta);
-			rot -= theta;
-		}
-	}
-	
-}
-
-
-glm::mat4 Sprite::getMatrix() {
-	glm::mat4 translate = glm::translate(glm::mat4(1.0), trans);
-	glm::mat4 rotate = glm::rotate(glm::mat4(1.0), glm::radians(rot),
-		glm::vec3(0, 0, 1));
-	glm::mat4 scalar = glm::scale(glm::mat4(1.0), scale);
-	return (translate * rotate * scalar);
+	glm::vec3 head = heading(p);
+	float speed = 1.0;
+	trans += head * speed / ofGetFrameRate();
 }
 
 //  Render the sprite
@@ -96,25 +64,19 @@ void Sprite::draw() {
 
 	ofSetColor(255, 255, 255, 255);
 
-	// draw image centered
+	// draw image centered and add in translation amount
 	//
 	if (haveImage) {
 		ofSetColor(ofColor::white);
-		ofPushMatrix();
-		ofMultMatrix(getMatrix());
-		image.draw(-imageWidth / 2.0, -imageHeight / 2.0);
-		ofPopMatrix();
-
+		image.draw(-imageWidth / 2.0 + trans.x, -imageHeight / 2.0 + trans.y);
 	}
 	else {
-		// draw the triangle
+		// in case no image is supplied, draw something.
 		// 
 		ofSetColor(ofColor::green);
-		ofPushMatrix();
-		ofMultMatrix(getMatrix());
-		ofDrawTriangle(glm::vec3(-height, height, 0), glm::vec3(height, height, 0), glm::vec3(0, -height, 0));
-		ofPopMatrix();
-
+		ofDrawTriangle(glm::vec3(-height, height, 0) + trans, glm::vec3(height, height, 0) + trans, glm::vec3(0,
+			-height, 0) + trans);
+		//ofDrawRectangle(-width / 2.0 + trans.x, -height / 2.0 + trans.y, width, height);
 	}
 }
 
@@ -180,7 +142,10 @@ void SpriteSystem::update(glm::vec3 p) {
 	}
 
 	//  Move sprite
+	//	replace with moveSprite() along heading
 	for (int i = 0; i < sprites.size(); i++) {
+		//sprites[i].trans += sprites[i].velocity / ofGetFrameRate();
+		sprites[i].rot += 1;
 		sprites[i].moveSprite(p);
 	}
 }

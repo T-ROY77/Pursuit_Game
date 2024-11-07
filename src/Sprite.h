@@ -14,10 +14,10 @@
 class BaseObject {
 public:
 	BaseObject();
-	glm::vec3 trans, scale;
+	ofVec3f trans, scale;
 	float	rot;
 	bool	bSelected;
-	void setPosition(glm::vec3 p);
+	void setPosition(ofVec3f);
 };
 
 //  General Sprite class  (similar to a Particle)
@@ -38,7 +38,6 @@ public:
 	float width, height, imageWidth, imageHeight;
 	glm::vec3 heading(glm::vec3 p);
 	void moveSprite(glm::vec3 p);
-	glm::mat4 getMatrix();
 
 };
 

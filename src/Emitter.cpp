@@ -15,8 +15,6 @@ Emitter::Emitter(SpriteSystem* spriteSys) {
 
 	lastSpawned = 0;
 	rate = 1;    // sprites/sec
-	particleSpeed = 1;
-
 	haveChildImage = false;
 	haveImage = false;
 	velocity = ofVec3f(0, 0, 0);
@@ -64,12 +62,11 @@ void Emitter::update(glm::vec3 p) {
 
 		//set random spawn point
 		sprite.setPosition(glm::vec3(ofRandom(ofGetWindowWidth() - 1), ofRandom(ofGetWindowHeight() - 1), 0));
-		sprite.rot = ofRandom(359);
+		//sprite.setPosition(trans);
+
 		sprite.birthtime = time;
 		sprite.width = childWidth;
 		sprite.height = childHeight;
-		sprite.speed = particleSpeed;
-
 		sys->add(sprite);
 		lastSpawned = time;
 	}
@@ -109,9 +106,6 @@ void Emitter::setRate(float r) {
 	rate = r;
 }
 
-void Emitter::setSpeed(float s) {
-	particleSpeed = s;
-}
 float Emitter::maxDistPerFrame() {
 	return  velocity.length() / ofGetFrameRate();
 }

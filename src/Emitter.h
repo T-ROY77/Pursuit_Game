@@ -24,7 +24,6 @@ public:
 	void setChildSize(float w, float h) { childWidth = w; childHeight = h; }
 	void setImage(ofImage);
 	void setRate(float);
-	void setSpeed(float);
 	float maxDistPerFrame();
 	void update(glm::vec3 p);
 	SpriteSystem* sys;
@@ -40,6 +39,4 @@ public:
 	bool haveImage;
 	float width, height;
 	float childWidth, childHeight;
-	float particleSpeed;
-
 };
