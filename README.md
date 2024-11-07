@@ -2,7 +2,7 @@ Downloads
 
 You should have openframeworks for Visual Studio downloaded to run the project
 
-You can download the .zip file and extract all files
+You can download the .zip file and extract all files. 
 Files should be placed in openframeworks/apps/ folder
 
 Generating Project Files
